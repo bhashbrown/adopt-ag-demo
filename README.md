@@ -2,7 +2,14 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 ## Getting Started
 
-First, run the development server:
+First, add the environment variables in an `.env.local` file:
+
+```bash
+# Contact me for the actual token
+MAPBOX_GL_ACCESS_TOKEN=<token>
+```
+
+Then run the development server:
 
 ```bash
 # use the specified Node version
