@@ -26,7 +26,6 @@ export default function Page(props: Props) {
           </Link>
         </div>
         {props.children}
-        <div />
       </main>
     </>
   );

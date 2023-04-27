@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { FeatureCollection } from 'geojson';
-import Error from 'next/error';
+import Button from '@/components/button';
 
 type PolygonData = {
   id: string;
@@ -141,12 +141,12 @@ export default function MapboxPage(props: Props) {
           width: '100%',
         }}
       >
-        <button disabled={isMutating} onClick={handleLoad}>
+        <Button disabled={isMutating} onClick={handleLoad}>
           Load
-        </button>
-        <button disabled={isMutating} onClick={handleSave}>
+        </Button>
+        <Button disabled={isMutating} onClick={handleSave}>
           Save
-        </button>
+        </Button>
       </div>
       <div
         style={{
