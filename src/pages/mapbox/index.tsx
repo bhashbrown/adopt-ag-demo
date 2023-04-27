@@ -1,47 +1,126 @@
 import Page from '@/components/page';
+import fsPromises from 'fs/promises';
+import path from 'path';
 import mapboxgl from 'mapbox-gl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import { FeatureCollection } from 'geojson';
+import Error from 'next/error';
 
-export default function MapboxPage() {
+type PolygonData = {
+  id: string;
+  date: string; // ISO Date string
+  featureCollection: FeatureCollection; // GeoJSON
+};
+
+type Props = {
+  polygonData: PolygonData[];
+};
+
+const MAPBOXDRAW_LOAD_FAILURE = 'Error: MapboxDraw failed to load';
+const MAPBOX_LOAD_FAILURE = 'Error: Mapbox failed to load';
+
+export default function MapboxPage(props: Props) {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | any>(null);
+  const map = useRef<mapboxgl.Map | null>(null);
+  const draw = useRef<MapboxDraw | null>(null);
+  const length = props.polygonData.length;
+  const [polygonData, setPolygonData] = useState<PolygonData[]>(
+    length ? props.polygonData : [],
+  );
+  const [isMutating, setIsMutating] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const handleSuccessfulSave = () => {
+    setTimeout(() => setSuccessMessage('Map saved successfully!'), 0);
+    setTimeout(() => setSuccessMessage(''), 5000);
+  };
+
+  const handleSave = async () => {
+    setErrorMessage(null);
+    if (!draw.current) {
+      return setErrorMessage(MAPBOXDRAW_LOAD_FAILURE);
+    }
+    setIsMutating(true);
+    const featureCollection: FeatureCollection = draw.current.getAll();
+    const now = new Date().toISOString();
+
+    try {
+      const response = await fetch('/api/polygonData', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          date: now,
+          featureCollection: featureCollection,
+        }),
+      });
+      const data = await response.json();
+      setPolygonData(data);
+      handleSuccessfulSave();
+    } catch (error) {
+      setErrorMessage('Error storing polygon map data');
+    } finally {
+      setIsMutating(false);
+    }
+  };
+
+  const handleLoad = async () => {
+    setErrorMessage(null);
+    if (!draw.current) {
+      return setErrorMessage(MAPBOXDRAW_LOAD_FAILURE);
+    }
+    if (polygonData) {
+      const length = polygonData.length;
+      const latestPolygonData = polygonData[length - 1].featureCollection;
+      draw.current.set(latestPolygonData);
+    }
+  };
+
+  // Initialize map only once (after component has mounted)
   useEffect(() => {
-    mapboxgl.accessToken = process.env.MAPBOX_GL_ACCESS_TOKEN ?? '';
     map.current = new mapboxgl.Map({
+      accessToken: process.env.MAPBOX_GL_ACCESS_TOKEN,
       container: mapContainer.current!,
       style: 'mapbox://styles/b-hash/clgy8zl8i005g01pp2mibe22v',
       center: [-100, 38],
       zoom: 12,
     });
 
-    const draw = new MapboxDraw({
-      displayControlsDefault: true,
-      // Select which mapbox-gl-draw control buttons to add to the map.
+    draw.current = new MapboxDraw({
+      displayControlsDefault: false,
       controls: {
         polygon: true,
         trash: true,
       },
-      // Set mapbox-gl-draw to draw by default.
-      // The user does not have to click the polygon control button first.
       defaultMode: 'draw_polygon',
     });
 
-    // Map#addControl takes an optional second argument to set the position of the control.
-    // If no position is specified the control defaults to `top-right`. See the docs
-    // for more details: https://docs.mapbox.com/mapbox-gl-js/api/#map#addcontrol
-
-    map.current.addControl(draw, 'top-right');
-
-    //     function updateArea(e: MapboxDraw.DrawEvent) {}
-
-    map.current.on('load', () => {});
-    //     map.on('draw.create', updateArea);
-    //     map.on('draw.delete', updateArea);
-    //     map.on('draw.update', updateArea);
+    // add drawing capabilities to map
+    map.current.addControl(draw.current, 'top-right');
   }, []);
+
+  // separate map's onLoad function since it depends on polygonData
+  useEffect(() => {
+    setErrorMessage(null);
+    if (!map.current) {
+      return setErrorMessage(MAPBOX_LOAD_FAILURE);
+    }
+    if (!draw.current) {
+      return setErrorMessage(MAPBOXDRAW_LOAD_FAILURE);
+    }
+    map.current.on('load', () => {
+      const length = props.polygonData.length;
+      if (length) {
+        draw.current?.set(props.polygonData[length - 1].featureCollection);
+      }
+    });
+  }, [props.polygonData]);
+
   return (
     <Page>
       <div
@@ -55,6 +134,58 @@ export default function MapboxPage() {
           width: '100%',
         }}
       />
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          width: '100%',
+        }}
+      >
+        <button disabled={isMutating} onClick={handleLoad}>
+          Load
+        </button>
+        <button disabled={isMutating} onClick={handleSave}>
+          Save
+        </button>
+      </div>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          width: '100%',
+        }}
+      >
+        <p>{errorMessage}</p>
+        <p>{successMessage}</p>
+      </div>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          width: '100%',
+        }}
+      >
+        <h2>Save History</h2>
+        {polygonData &&
+          [...polygonData].reverse().map((polygon, index) => {
+            const date = new Date(polygon.date);
+            return (
+              <div
+                key={`polygon-${index}`}
+                style={{ display: 'flex', width: '100%' }}
+              >
+                <p>{`${date.toLocaleDateString()} - ${date.toLocaleTimeString()}`}</p>
+              </div>
+            );
+          })}
+      </div>
     </Page>
   );
+}
+
+export async function getStaticProps() {
+  const dataFilePath = path.join(process.cwd(), 'db/polygon.json');
+  const polygonJSONData = await fsPromises.readFile(dataFilePath);
+  const polygonData: PolygonData[] = JSON.parse(polygonJSONData.toString());
+  return { props: { polygonData } };
 }
