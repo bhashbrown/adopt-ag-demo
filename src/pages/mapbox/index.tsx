@@ -7,27 +7,30 @@ import { useEffect, useRef, useState } from 'react';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { FeatureCollection } from 'geojson';
-import { Alert, Box, Button, Card, Snackbar, Typography } from '@mui/material';
+import { Alert, Box, Button, Snackbar } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
+import SaveHistory from './components/save-history';
 
-type PolygonData = {
+export type PolygonData = {
   id: string;
   date: string; // ISO Date string
   featureCollection: FeatureCollection; // GeoJSON
 };
 
-type Props = {
-  polygonData: PolygonData[];
-};
-
-const MAPBOXDRAW_LOAD_FAILURE = 'Error: MapboxDraw failed to load';
-const MAPBOX_LOAD_FAILURE = 'Error: Mapbox failed to load';
-const SAVE_FAILURE = 'There was an error while trying to save your map!';
-enum SaveStatus {
+export enum SaveStatus {
   ready,
   success,
   error,
 }
+
+export const MAPBOXDRAW_LOAD_FAILURE = 'Error: MapboxDraw failed to load';
+
+type Props = {
+  polygonData: PolygonData[];
+};
+
+const MAPBOX_LOAD_FAILURE = 'Error: Mapbox failed to load';
+const SAVE_FAILURE = 'There was an error while trying to save your map!';
 
 export default function MapboxPage(props: Props) {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -80,21 +83,6 @@ export default function MapboxPage(props: Props) {
       setErrorMessage(SAVE_FAILURE);
     } finally {
       setIsMutating(false);
-    }
-  };
-
-  const handleLoad = async (id: string) => {
-    setStatus(SaveStatus.ready);
-    setErrorMessage(null);
-    if (!draw.current) {
-      setStatus(SaveStatus.error);
-      return setErrorMessage(MAPBOXDRAW_LOAD_FAILURE);
-    }
-    if (polygonData) {
-      const polygon = polygonData.find(
-        (polygon) => polygon.id === id,
-      )?.featureCollection;
-      return polygon ? draw.current.set(polygon) : null;
     }
   };
 
@@ -182,34 +170,12 @@ export default function MapboxPage(props: Props) {
           </Alert>
         </Snackbar>
         {polygonData.length ? (
-          <Card
-            variant="outlined"
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              padding: '1rem',
-              width: { xs: '100%', sm: '15rem' },
-            }}
-          >
-            <Typography component="h2" variant="h5" marginBottom="0.5rem">
-              Save History
-            </Typography>
-            {[...polygonData].reverse().map((polygon, index) => {
-              const date = new Date(polygon.date);
-              return (
-                <Button
-                  key={`polygon-${index}`}
-                  disabled={isMutating}
-                  onClick={() => handleLoad(polygon.id)}
-                  size="large"
-                  fullWidth
-                >
-                  {`${date.toLocaleDateString()} - ${date.toLocaleTimeString()}`}
-                </Button>
-              );
-            })}
-          </Card>
+          <SaveHistory
+            mapboxDrawRef={draw}
+            polygonDataArray={[...polygonData].reverse()}
+            setErrorMessage={setErrorMessage}
+            setStatus={setStatus}
+          />
         ) : null}
       </Box>
     </Page>
