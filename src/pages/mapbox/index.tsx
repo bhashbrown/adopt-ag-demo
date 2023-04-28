@@ -6,31 +6,20 @@ import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import { useEffect, useRef, useState } from 'react';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { FeatureCollection } from 'geojson';
 import { Box } from '@mui/material';
 import SaveHistory from './components/save-history';
 import SaveMapButton from './components/save-map-button';
 import SnackbarAlert from '@/components/snackbar-alert';
-
-export type PolygonData = {
-  id: string;
-  date: string; // ISO Date string
-  featureCollection: FeatureCollection; // GeoJSON
-};
-
-export enum SaveStatus {
-  ready,
-  success,
-  error,
-}
-
-export const MAPBOXDRAW_LOAD_FAILURE = 'Error: MapboxDraw failed to load';
+import {
+  MAPBOXDRAW_LOAD_FAILURE,
+  MAPBOX_LOAD_FAILURE,
+  PolygonData,
+  SaveStatus,
+} from './utils';
 
 type Props = {
   polygonData: PolygonData[];
 };
-
-const MAPBOX_LOAD_FAILURE = 'Error: Mapbox failed to load';
 
 export default function MapboxPage(props: Props) {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -46,7 +35,7 @@ export default function MapboxPage(props: Props) {
 
   const handleCloseSnackbar = () => setStatus(SaveStatus.ready);
 
-  // Initialize map only once (after component has mounted)
+  // initialize Mapbox and MapboxDraw only once (after page has mounted)
   useEffect(() => {
     mapboxRef.current = new mapboxgl.Map({
       accessToken: process.env.MAPBOX_GL_ACCESS_TOKEN,
@@ -65,11 +54,11 @@ export default function MapboxPage(props: Props) {
       defaultMode: 'draw_polygon',
     });
 
-    // add drawing capabilities to map
+    // add drawing capabilities to mapbox
     mapboxRef.current.addControl(mapboxDrawRef.current, 'top-right');
   }, []);
 
-  // separate map's onLoad function since it depends on polygonData
+  // if polygon data exists in the local JSON file, then load it onto the mapbox
   useEffect(() => {
     if (!mapboxRef.current) {
       setStatus(SaveStatus.error);
@@ -108,6 +97,14 @@ export default function MapboxPage(props: Props) {
             setStatus={setStatus}
           />
         </Box>
+        {polygonData.length ? (
+          <SaveHistory
+            mapboxDrawRef={mapboxDrawRef}
+            polygonDataArray={[...polygonData].reverse()}
+            setErrorMessage={setErrorMessage}
+            setStatus={setStatus}
+          />
+        ) : null}
         <SnackbarAlert
           open={status === SaveStatus.success}
           onClose={handleCloseSnackbar}
@@ -122,14 +119,6 @@ export default function MapboxPage(props: Props) {
         >
           {errorMessage}
         </SnackbarAlert>
-        {polygonData.length ? (
-          <SaveHistory
-            mapboxDrawRef={mapboxDrawRef}
-            polygonDataArray={[...polygonData].reverse()}
-            setErrorMessage={setErrorMessage}
-            setStatus={setStatus}
-          />
-        ) : null}
       </Box>
     </Page>
   );

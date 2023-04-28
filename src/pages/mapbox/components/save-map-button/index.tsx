@@ -1,9 +1,9 @@
-import { Button, Card, Typography } from '@mui/material';
+import { Button } from '@mui/material';
 import {
   MAPBOXDRAW_LOAD_FAILURE,
   PolygonData,
   SaveStatus,
-} from '@/pages/mapbox';
+} from '@/pages/mapbox/utils';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import { Dispatch, MutableRefObject, SetStateAction, useState } from 'react';
 import { FeatureCollection } from 'geojson';
@@ -17,6 +17,11 @@ type Props = {
 };
 const SAVE_FAILURE = 'There was an error while trying to save your map!';
 
+/**
+ * Saves the current state of the MapboxDraw polygons by creating a POST request to `/api/polygonData`.
+ * A successful POST request will result in a response with the most up to date
+ * list of saved GeoJSON data. This data is rendered in the `SaveHistory` component.
+ */
 export default function SaveMapButton({
   mapboxDrawRef,
   setErrorMessage,

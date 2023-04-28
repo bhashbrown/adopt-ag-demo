@@ -3,7 +3,7 @@ import {
   MAPBOXDRAW_LOAD_FAILURE,
   PolygonData,
   SaveStatus,
-} from '@/pages/mapbox';
+} from '@/pages/mapbox/utils';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import { Dispatch, MutableRefObject, SetStateAction } from 'react';
 
@@ -14,6 +14,10 @@ type Props = {
   setStatus: Dispatch<SetStateAction<SaveStatus>>;
 };
 
+/**
+ * Shows a list of timestamps that represent saved GeoJSON files.
+ * Clicking on one will load that GeoJSON polygon onto the Mapbox.
+ */
 export default function SaveHistory({
   mapboxDrawRef,
   polygonDataArray,
@@ -53,7 +57,7 @@ export default function SaveHistory({
         const date = new Date(polygon.date);
         return (
           <Button
-            key={`polygon-${index}`}
+            key={`polygon-${polygon.id}`}
             onClick={() => handleLoad(polygon.id)}
             size="large"
             fullWidth
