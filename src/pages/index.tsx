@@ -15,25 +15,17 @@ export default function Home() {
           sm: 'column-reverse',
           md: 'row',
         }}
-        sx={{
-          margin: '3rem 0',
-          width: '100%',
-        }}
+        margin="3rem 0"
+        width="100%"
       >
-        <div>
+        <Box maxWidth="70rem">
           <Typography
             component="h1"
-            sx={{
-              maxWidth: '700px',
-              typography: { xs: 'h4', sm: 'h3', md: 'h2' },
-            }}
+            sx={{ typography: { xs: 'h4', sm: 'h3', md: 'h2' } }}
           >
             Creating value from agricultural data has never been easier.
           </Typography>
-          <Typography
-            paragraph
-            sx={{ margin: '1rem 0 2rem 0', maxWidth: '700px' }}
-          >
+          <Typography paragraph sx={{ margin: '1rem 0 2rem 0' }}>
             Draw out shapes on any plot of land in real-time and save the
             results.
           </Typography>
@@ -47,7 +39,7 @@ export default function Home() {
               Get Started!
             </Button>
           </Link>
-        </div>
+        </Box>
         <Box
           position="relative"
           minHeight={{ xs: 262, sm: 290, md: 328 }}
