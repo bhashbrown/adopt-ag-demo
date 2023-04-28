@@ -19,4 +19,15 @@ export const theme = createTheme({
       },
     },
   },
+  typography: {
+    h2: {
+      fontWeight: 600,
+    },
+    h3: {
+      fontWeight: 500,
+    },
+    h4: {
+      fontWeight: 500,
+    },
+  },
 });

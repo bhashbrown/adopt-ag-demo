@@ -1,12 +1,8 @@
 import Head from 'next/head';
-import { Inter } from 'next/font/google';
 import styles from '@/styles/Home.module.css';
 import Link from 'next/link';
 import { ReactNode } from 'react';
-import logo from 'public/adopt_logo-t.webp';
 import Image from 'next/image';
-
-const inter = Inter({ subsets: ['latin'] });
 
 type Props = {
   children?: ReactNode;
@@ -22,12 +18,13 @@ export default function Page(props: Props) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div style={{ display: 'flex', justifyContent: 'center' }}>
-        <main className={`${styles.main} ${inter.className}`}>
+        <main className={styles.main}>
           <header style={{ width: '100%' }}>
             <Link href="/">
               <Image
                 alt="adopt logo"
                 src="/adopt_logo-t.webp"
+                priority
                 height={111}
                 width={318}
               />
