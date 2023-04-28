@@ -7,9 +7,10 @@ import { useEffect, useRef, useState } from 'react';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { FeatureCollection } from 'geojson';
-import { Alert, Box, Button, Snackbar } from '@mui/material';
-import SaveIcon from '@mui/icons-material/Save';
+import { Box } from '@mui/material';
 import SaveHistory from './components/save-history';
+import SaveMapButton from './components/save-map-button';
+import SnackbarAlert from '@/components/snackbar-alert';
 
 export type PolygonData = {
   id: string;
@@ -30,65 +31,24 @@ type Props = {
 };
 
 const MAPBOX_LOAD_FAILURE = 'Error: Mapbox failed to load';
-const SAVE_FAILURE = 'There was an error while trying to save your map!';
 
 export default function MapboxPage(props: Props) {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const draw = useRef<MapboxDraw | null>(null);
+  const mapboxRef = useRef<mapboxgl.Map | null>(null);
+  const mapboxDrawRef = useRef<MapboxDraw | null>(null);
 
   const length = props.polygonData.length;
   const [polygonData, setPolygonData] = useState<PolygonData[]>(
     length ? props.polygonData : [],
   );
-  const [isMutating, setIsMutating] = useState(false);
   const [status, setStatus] = useState<SaveStatus>(SaveStatus.ready);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleCloseSnackbar = () => setStatus(SaveStatus.ready);
 
-  const handleSave = async () => {
-    if (!draw.current) {
-      setStatus(SaveStatus.error);
-      return setErrorMessage(MAPBOXDRAW_LOAD_FAILURE);
-    }
-    setStatus(SaveStatus.ready);
-    setErrorMessage(null);
-    setIsMutating(true);
-    const featureCollection: FeatureCollection = draw.current.getAll();
-    const now = new Date().toISOString();
-
-    try {
-      const response = await fetch('/api/polygonData', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          date: now,
-          featureCollection: featureCollection,
-        }),
-      });
-      const data = await response.json();
-
-      if (response.status === 200) {
-        setPolygonData(data);
-        setStatus(SaveStatus.success);
-      } else {
-        setErrorMessage(SAVE_FAILURE);
-        setStatus(SaveStatus.error);
-      }
-    } catch (error) {
-      setStatus(SaveStatus.error);
-      setErrorMessage(SAVE_FAILURE);
-    } finally {
-      setIsMutating(false);
-    }
-  };
-
   // Initialize map only once (after component has mounted)
   useEffect(() => {
-    map.current = new mapboxgl.Map({
+    mapboxRef.current = new mapboxgl.Map({
       accessToken: process.env.MAPBOX_GL_ACCESS_TOKEN,
       container: mapContainer.current!,
       style: 'mapbox://styles/b-hash/clgy8zl8i005g01pp2mibe22v',
@@ -96,7 +56,7 @@ export default function MapboxPage(props: Props) {
       zoom: 12,
     });
 
-    draw.current = new MapboxDraw({
+    mapboxDrawRef.current = new MapboxDraw({
       displayControlsDefault: false,
       controls: {
         polygon: true,
@@ -106,23 +66,25 @@ export default function MapboxPage(props: Props) {
     });
 
     // add drawing capabilities to map
-    map.current.addControl(draw.current, 'top-right');
+    mapboxRef.current.addControl(mapboxDrawRef.current, 'top-right');
   }, []);
 
   // separate map's onLoad function since it depends on polygonData
   useEffect(() => {
-    if (!map.current) {
+    if (!mapboxRef.current) {
       setStatus(SaveStatus.error);
       return setErrorMessage(MAPBOX_LOAD_FAILURE);
     }
-    if (!draw.current) {
+    if (!mapboxDrawRef.current) {
       setStatus(SaveStatus.error);
       return setErrorMessage(MAPBOXDRAW_LOAD_FAILURE);
     }
-    map.current.on('load', () => {
+    mapboxRef.current.on('load', () => {
       const length = props.polygonData.length;
       if (length) {
-        draw.current?.set(props.polygonData[length - 1].featureCollection);
+        mapboxDrawRef.current?.set(
+          props.polygonData[length - 1].featureCollection,
+        );
       }
     });
   }, [props.polygonData]);
@@ -139,39 +101,30 @@ export default function MapboxPage(props: Props) {
           width="100%"
         />
         <Box display="flex" justifyContent="flex-end" width="100%">
-          <Button
-            disabled={isMutating}
-            onClick={handleSave}
-            size="large"
-            startIcon={<SaveIcon />}
-            variant="contained"
-            sx={{
-              margin: { xs: '1rem 0', sm: '1rem 0 0 1rem' },
-              width: { xs: '100%', sm: 'auto' },
-            }}
-          >
-            Save Map
-          </Button>
+          <SaveMapButton
+            mapboxDrawRef={mapboxDrawRef}
+            setErrorMessage={setErrorMessage}
+            setPolygonData={setPolygonData}
+            setStatus={setStatus}
+          />
         </Box>
-        <Snackbar
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-          open={status !== SaveStatus.ready}
-          autoHideDuration={5000}
+        <SnackbarAlert
+          open={status === SaveStatus.success}
           onClose={handleCloseSnackbar}
+          severity="success"
         >
-          <Alert
-            onClose={handleCloseSnackbar}
-            severity={status === SaveStatus.success ? 'success' : 'error'}
-            sx={{ width: '100%' }}
-          >
-            {status === SaveStatus.success
-              ? 'Map saved successfully!'
-              : errorMessage}
-          </Alert>
-        </Snackbar>
+          Map saved successfully!
+        </SnackbarAlert>
+        <SnackbarAlert
+          open={status === SaveStatus.error}
+          onClose={handleCloseSnackbar}
+          severity="error"
+        >
+          {errorMessage}
+        </SnackbarAlert>
         {polygonData.length ? (
           <SaveHistory
-            mapboxDrawRef={draw}
+            mapboxDrawRef={mapboxDrawRef}
             polygonDataArray={[...polygonData].reverse()}
             setErrorMessage={setErrorMessage}
             setStatus={setStatus}
