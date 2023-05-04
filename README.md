@@ -2,7 +2,7 @@
 
 A self-contained project to demonstrate how [mapbox-gl-draw](https://github.com/mapbox/mapbox-gl-draw) could be used by someone in the agricultural industry. In this example, a GeoJSON file of the drawn polygons is saved locally and can be accessed by the client via a Save History component.
 
-Focus was placed on designing a simple UI that would dynamically render for mobile, tablet, and desktop user. The API used to save and retrieve mapbox polygons provides an easy way for the client to display success and error notifications. Below are screenshots of the landing page and the main mapbox page.
+Focus was placed on designing a simple UI that would dynamically render for mobile, tablet, and desktop users. The API used to save and retrieve mapbox polygons provides an easy way for the client to display success and error notifications. Below are screenshots of the landing page and the main mapbox page.
 
 This project was built using [NextJS](https://nextjs.org/) and [Material UI](https://mui.com/).
 
