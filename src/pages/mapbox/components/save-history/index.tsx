@@ -3,7 +3,7 @@ import {
   MAPBOXDRAW_LOAD_FAILURE,
   PolygonData,
   SaveStatus,
-} from '@/pages/mapbox/utils';
+} from '@/components/mapbox/utils';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import { Dispatch, MutableRefObject, SetStateAction } from 'react';
 
@@ -53,7 +53,7 @@ export default function SaveHistory({
       <Typography component="h2" variant="h5" marginBottom="0.5rem">
         Save History
       </Typography>
-      {polygonDataArray.map((polygon, index) => {
+      {polygonDataArray?.map((polygon, index) => {
         const date = new Date(polygon.date);
         return (
           <Button

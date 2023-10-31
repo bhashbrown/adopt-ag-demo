@@ -15,7 +15,7 @@ import {
   MAPBOX_LOAD_FAILURE,
   PolygonData,
   SaveStatus,
-} from './utils';
+} from '../../components/mapbox/utils';
 
 type Props = {
   polygonData: PolygonData[];

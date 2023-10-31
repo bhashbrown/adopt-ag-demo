@@ -3,7 +3,7 @@ import {
   MAPBOXDRAW_LOAD_FAILURE,
   PolygonData,
   SaveStatus,
-} from '@/pages/mapbox/utils';
+} from '@/components/mapbox/utils';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import { Dispatch, MutableRefObject, SetStateAction, useState } from 'react';
 import { FeatureCollection } from 'geojson';
