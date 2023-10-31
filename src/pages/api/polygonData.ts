@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import fsPromises from 'fs/promises';
 import path from 'path';
 import { FeatureCollection } from 'geojson';
-import { createId } from '@paralleldrive/cuid2';
+import { randomUUID } from 'crypto';
 
 type PolygonData = {
   id: string;
@@ -34,7 +34,7 @@ export default async function processPolygonData(
 
   // define new polygon data with a unique id
   const newPolygon: PolygonData = {
-    id: createId(),
+    id: randomUUID(),
     ...req.body,
   };
 
