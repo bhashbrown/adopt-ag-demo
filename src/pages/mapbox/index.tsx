@@ -7,8 +7,8 @@ import { useEffect, useRef, useState } from 'react';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Box } from '@mui/material';
-import SaveHistory from './components/save-history';
-import SaveMapButton from './components/save-map-button';
+import SaveHistory from '../../components/mapbox/save-history';
+import SaveMapButton from '../../components/mapbox/save-map-button';
 import SnackbarAlert from '@/components/snackbar-alert';
 import {
   MAPBOXDRAW_LOAD_FAILURE,

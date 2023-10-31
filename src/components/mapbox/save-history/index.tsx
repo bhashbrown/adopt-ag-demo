@@ -53,7 +53,7 @@ export default function SaveHistory({
       <Typography component="h2" variant="h5" marginBottom="0.5rem">
         Save History
       </Typography>
-      {polygonDataArray?.map((polygon, index) => {
+      {polygonDataArray.map((polygon, index) => {
         const date = new Date(polygon.date);
         return (
           <Button
